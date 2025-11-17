@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'QUANTFOLIO - Portfolio Tracker',
+  title: 'Quantfolio - Portfolio Tracker',
   description: 'Track your investment portfolio with real-time market data',
 }
 

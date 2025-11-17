@@ -19,7 +19,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/" className="text-2xl font-bold text-primary-600">
-              TestFol.io
+              Quantfolio
             </Link>
             {isAuthenticated && (
               <div className="ml-10 flex items-baseline space-x-4">
