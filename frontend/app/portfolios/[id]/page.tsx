@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
+import SignInPrompt from '@/components/SignInPrompt'
 
 interface Holding {
   id: string
@@ -59,12 +60,10 @@ export default function PortfolioDetailPage() {
   const [activeTab, setActiveTab] = useState<'holdings' | 'transactions'>('holdings')
   const [showAddHolding, setShowAddHolding] = useState(false)
   const [showAddTransaction, setShowAddTransaction] = useState(false)
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
+    // Allow unauthenticated users to view public portfolios
     fetchPortfolio()
   }, [isAuthenticated, portfolioId])
 
@@ -96,6 +95,11 @@ export default function PortfolioDetailPage() {
   }, [activeTab, portfolioId])
 
   const handleDeleteHolding = async (holdingId: string) => {
+    if (!isAuthenticated) {
+      setShowSignInPrompt(true)
+      return
+    }
+
     if (!confirm('Are you sure you want to remove this holding?')) return
     
     try {
@@ -108,6 +112,11 @@ export default function PortfolioDetailPage() {
   }
 
   const handleDeleteTransaction = async (transactionId: string) => {
+    if (!isAuthenticated) {
+      setShowSignInPrompt(true)
+      return
+    }
+
     if (!confirm('Are you sure you want to delete this transaction?')) return
     
     try {
@@ -163,12 +172,21 @@ export default function PortfolioDetailPage() {
               )}
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowAddHolding(true)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-              >
-                Add Holding
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setShowAddHolding(true)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Add Holding
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowSignInPrompt(true)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Sign In to Add Holding
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -312,12 +330,16 @@ export default function PortfolioDetailPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">{allocation}%</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleDeleteHolding(holding.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Remove
-                            </button>
+                            {isAuthenticated ? (
+                              <button
+                                onClick={() => handleDeleteHolding(holding.id)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Remove
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">Sign in to remove</span>
+                            )}
                           </td>
                         </tr>
                       )
@@ -334,12 +356,21 @@ export default function PortfolioDetailPage() {
           <div className="bg-white rounded-lg border overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center">
               <h2 className="text-lg font-semibold">Transaction History</h2>
-              <button
-                onClick={() => setShowAddTransaction(true)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
-              >
-                Add Transaction
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setShowAddTransaction(true)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+                >
+                  Add Transaction
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowSignInPrompt(true)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+                >
+                  Sign In to Add
+                </button>
+              )}
             </div>
 
             {transactions.length === 0 ? (
@@ -411,12 +442,16 @@ export default function PortfolioDetailPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleDeleteTransaction(transaction.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Delete
-                            </button>
+                            {isAuthenticated ? (
+                              <button
+                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Delete
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">Sign in to delete</span>
+                            )}
                           </td>
                         </tr>
                       )
@@ -451,6 +486,14 @@ export default function PortfolioDetailPage() {
             }}
           />
         )}
+
+        {/* Sign In Prompt */}
+        {showSignInPrompt && (
+          <SignInPrompt
+            onClose={() => setShowSignInPrompt(false)}
+            message="Please sign in to save your data. Your changes will be saved to your account."
+          />
+        )}
       </div>
     </div>
   )
@@ -472,8 +515,16 @@ function AddHoldingModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const { isAuthenticated } = useAuthStore()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      setError('Please sign in to save holdings')
+      return
+    }
+
     setError('')
     setLoading(true)
 
@@ -502,7 +553,11 @@ function AddHoldingModal({
 
       onSuccess()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to add holding')
+      if (err.response?.status === 401) {
+        setError('Please sign in to save holdings')
+      } else {
+        setError(err.response?.data?.detail || 'Failed to add holding')
+      }
     } finally {
       setLoading(false)
     }
@@ -609,9 +664,16 @@ function AddTransactionModal({
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { isAuthenticated } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      setError('Please sign in to save transactions')
+      return
+    }
+
     setError('')
     setLoading(true)
 
@@ -643,7 +705,11 @@ function AddTransactionModal({
 
       onSuccess()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to add transaction')
+      if (err.response?.status === 401) {
+        setError('Please sign in to save transactions')
+      } else {
+        setError(err.response?.data?.detail || 'Failed to add transaction')
+      }
     } finally {
       setLoading(false)
     }

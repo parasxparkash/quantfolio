@@ -21,28 +21,26 @@ export default function Navbar() {
             <Link href="/" className="text-2xl font-bold text-primary-600">
               Quantfolio
             </Link>
-            {isAuthenticated && (
-              <div className="ml-10 flex items-baseline space-x-4">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/portfolios"
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Portfolios
-                </Link>
-                <Link
-                  href="/watchlist"
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Watchlist
-                </Link>
-              </div>
-            )}
+            <div className="ml-10 flex items-baseline space-x-4">
+              <Link
+                href="/dashboard"
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/portfolios"
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Portfolios
+              </Link>
+              <Link
+                href="/watchlist"
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Watchlist
+              </Link>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">

@@ -33,10 +33,7 @@ export default function WatchlistPage() {
   const [showAddSymbol, setShowAddSymbol] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
+    // Allow unauthenticated users to view (will show empty state)
     fetchWatchlists()
   }, [isAuthenticated])
 
@@ -86,35 +83,62 @@ export default function WatchlistPage() {
   }
 
   const handleAddSymbol = async (watchlistId: string, symbol: string) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to add symbols to watchlist')
+      return
+    }
+
     try {
       // The API expects symbol as a query parameter
       await api.post(`/api/watchlist/${watchlistId}/symbols?symbol=${encodeURIComponent(symbol.toUpperCase())}`)
       setShowAddSymbol(null)
       fetchWatchlists()
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to add symbol')
+      if (error.response?.status === 401) {
+        alert('Please sign in to add symbols')
+      } else {
+        alert(error.response?.data?.detail || 'Failed to add symbol')
+      }
     }
   }
 
   const handleRemoveSymbol = async (watchlistId: string, symbol: string) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to remove symbols from watchlist')
+      return
+    }
+
     if (!confirm(`Remove ${symbol} from watchlist?`)) return
     
     try {
       await api.delete(`/api/watchlist/${watchlistId}/symbols/${symbol}`)
       fetchWatchlists()
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to remove symbol')
+      if (error.response?.status === 401) {
+        alert('Please sign in to remove symbols')
+      } else {
+        alert(error.response?.data?.detail || 'Failed to remove symbol')
+      }
     }
   }
 
   const handleDeleteWatchlist = async (watchlistId: string) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to delete watchlists')
+      return
+    }
+
     if (!confirm('Delete this watchlist?')) return
     
     try {
       await api.delete(`/api/watchlist/${watchlistId}`)
       fetchWatchlists()
     } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to delete watchlist')
+      if (error.response?.status === 401) {
+        alert('Please sign in to delete watchlists')
+      } else {
+        alert(error.response?.data?.detail || 'Failed to delete watchlist')
+      }
     }
   }
 
@@ -309,9 +333,16 @@ function CreateWatchlistModal({
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { isAuthenticated } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      setError('Please sign in to create watchlists')
+      return
+    }
+
     setError('')
     setLoading(true)
 
@@ -319,7 +350,11 @@ function CreateWatchlistModal({
       await api.post('/api/watchlist', { name })
       onSuccess()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create watchlist')
+      if (err.response?.status === 401) {
+        setError('Please sign in to create watchlists')
+      } else {
+        setError(err.response?.data?.detail || 'Failed to create watchlist')
+      }
     } finally {
       setLoading(false)
     }
@@ -388,8 +423,16 @@ function AddSymbolModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const { isAuthenticated } = useAuthStore()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      setError('Please sign in to add symbols')
+      return
+    }
+
     setError('')
     setLoading(true)
 
@@ -397,7 +440,11 @@ function AddSymbolModal({
       await api.post(`/api/watchlist/${watchlistId}/symbols?symbol=${encodeURIComponent(symbol.toUpperCase())}`)
       onSuccess()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to add symbol')
+      if (err.response?.status === 401) {
+        setError('Please sign in to add symbols')
+      } else {
+        setError(err.response?.data?.detail || 'Failed to add symbol')
+      }
     } finally {
       setLoading(false)
     }

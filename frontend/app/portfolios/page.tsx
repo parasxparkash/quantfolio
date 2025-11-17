@@ -27,10 +27,7 @@ export default function PortfoliosPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login')
-      return
-    }
+    // Allow unauthenticated users to view (will show empty state)
     fetchPortfolios()
   }, [isAuthenticated])
 
@@ -61,14 +58,27 @@ export default function PortfoliosPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">My Portfolios</h1>
-            <p className="text-gray-600">Manage your investment portfolios</p>
+            <p className="text-gray-600">
+              {isAuthenticated 
+                ? 'Manage your investment portfolios' 
+                : 'Sign in to save and manage your portfolios'}
+            </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            Create Portfolio
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Create Portfolio
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Sign In to Create
+            </Link>
+          )}
         </div>
 
         {portfolios.length === 0 ? (
@@ -162,8 +172,16 @@ function CreatePortfolioModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const { isAuthenticated } = useAuthStore()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!isAuthenticated) {
+      setError('Please sign in to create portfolios')
+      return
+    }
+
     setError('')
     setLoading(true)
 
@@ -176,7 +194,11 @@ function CreatePortfolioModal({
 
       onSuccess()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create portfolio')
+      if (err.response?.status === 401) {
+        setError('Please sign in to create portfolios')
+      } else {
+        setError(err.response?.data?.detail || 'Failed to create portfolio')
+      }
     } finally {
       setLoading(false)
     }
