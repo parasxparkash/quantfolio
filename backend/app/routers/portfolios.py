@@ -11,9 +11,10 @@ import secrets
 
 from app.models.portfolio import Portfolio
 from app.models.holding import Holding
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_current_user_optional
 from app.models.user import User
 from app.services.portfolio_service import PortfolioService
+from typing import Optional
 
 router = APIRouter()
 
@@ -31,8 +32,11 @@ class PortfolioUpdate(BaseModel):
 
 
 @router.get("", response_model=List[dict])
-async def get_portfolios(current_user: User = Depends(get_current_user)):
-    """Get all portfolios for current user with calculated values"""
+async def get_portfolios(current_user: Optional[User] = Depends(get_current_user_optional)):
+    """Get all portfolios for current user with calculated values (or empty if not authenticated)"""
+    if current_user is None:
+        return []  # Return empty list for unauthenticated users
+    
     portfolios = await Portfolio.find(Portfolio.user_id == current_user.id).to_list()
     results = []
     
@@ -78,17 +82,23 @@ async def create_portfolio(
 @router.get("/{portfolio_id}", response_model=dict)
 async def get_portfolio(
     portfolio_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Get portfolio by ID with real-time values and holdings with prices"""
+    """Get portfolio by ID with real-time values and holdings with prices (public portfolios accessible without auth)"""
     try:
         portfolio = await Portfolio.get(portfolio_id)
     except:
         raise HTTPException(status_code=404, detail="Portfolio not found")
     
-    # Check access
-    if str(portfolio.user_id) != str(current_user.id) and not portfolio.is_public:
-        raise HTTPException(status_code=403, detail="Access denied")
+    # Check access - allow if public or if user owns it
+    if current_user is None:
+        # Unauthenticated users can only access public portfolios
+        if not portfolio.is_public:
+            raise HTTPException(status_code=403, detail="Please sign in to view this portfolio")
+    else:
+        # Authenticated users can access their own portfolios or public ones
+        if str(portfolio.user_id) != str(current_user.id) and not portfolio.is_public:
+            raise HTTPException(status_code=403, detail="Access denied")
     
     # Get portfolio with calculated values and holdings with prices
     portfolio_data = await PortfolioService.get_portfolio_with_values(portfolio, include_holdings=True)

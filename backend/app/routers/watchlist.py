@@ -7,8 +7,9 @@ from typing import List
 from pydantic import BaseModel
 
 from app.models.watchlist import Watchlist
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_current_user_optional
 from app.models.user import User
+from typing import Optional
 
 router = APIRouter()
 
@@ -18,8 +19,11 @@ class WatchlistCreate(BaseModel):
 
 
 @router.get("", response_model=List[dict])
-async def get_watchlists(current_user: User = Depends(get_current_user)):
-    """Get all watchlists for current user"""
+async def get_watchlists(current_user: Optional[User] = Depends(get_current_user_optional)):
+    """Get all watchlists for current user (or empty if not authenticated)"""
+    if current_user is None:
+        return []  # Return empty list for unauthenticated users
+    
     watchlists = await Watchlist.find(Watchlist.user_id == current_user.id).to_list()
     return [
         {

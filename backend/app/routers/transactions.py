@@ -9,8 +9,9 @@ from datetime import datetime
 
 from app.models.transaction import Transaction
 from app.models.portfolio import Portfolio
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_current_user_optional
 from app.models.user import User
+from typing import Optional
 
 router = APIRouter()
 
@@ -29,17 +30,24 @@ class TransactionCreate(BaseModel):
 @router.get("/portfolio/{portfolio_id}", response_model=List[dict])
 async def get_transactions(
     portfolio_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Get all transactions for a portfolio"""
+    """Get all transactions for a portfolio (public portfolios accessible without auth)"""
     # Check portfolio access
     try:
         portfolio = await Portfolio.get(portfolio_id)
     except:
         raise HTTPException(status_code=404, detail="Portfolio not found")
     
-    if str(portfolio.user_id) != str(current_user.id) and not portfolio.is_public:
-        raise HTTPException(status_code=403, detail="Access denied")
+    # Check access - allow if public or if user owns it
+    if current_user is None:
+        # Unauthenticated users can only access public portfolios
+        if not portfolio.is_public:
+            raise HTTPException(status_code=403, detail="Please sign in to view this portfolio")
+    else:
+        # Authenticated users can access their own portfolios or public ones
+        if str(portfolio.user_id) != str(current_user.id) and not portfolio.is_public:
+            raise HTTPException(status_code=403, detail="Access denied")
     
     transactions = await Transaction.find(
         Transaction.portfolio_id == portfolio.id
