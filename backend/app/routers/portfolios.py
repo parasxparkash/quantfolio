@@ -13,6 +13,7 @@ from app.models.portfolio import Portfolio
 from app.models.holding import Holding
 from app.routers.auth import get_current_user
 from app.models.user import User
+from app.services.portfolio_service import PortfolioService
 
 router = APIRouter()
 
@@ -31,20 +32,16 @@ class PortfolioUpdate(BaseModel):
 
 @router.get("", response_model=List[dict])
 async def get_portfolios(current_user: User = Depends(get_current_user)):
-    """Get all portfolios for current user"""
+    """Get all portfolios for current user with calculated values"""
     portfolios = await Portfolio.find(Portfolio.user_id == current_user.id).to_list()
-    return [
-        {
-            "id": str(p.id),
-            "name": p.name,
-            "description": p.description,
-            "is_public": p.is_public,
-            "total_value": p.total_value,
-            "total_cost": p.total_cost,
-            "created_at": p.created_at.isoformat(),
-        }
-        for p in portfolios
-    ]
+    results = []
+    
+    for portfolio in portfolios:
+        # Calculate real-time values using yfinance
+        portfolio_data = await PortfolioService.get_portfolio_with_values(portfolio, include_holdings=False)
+        results.append(portfolio_data)
+    
+    return results
 
 
 @router.post("", response_model=dict)
@@ -83,7 +80,7 @@ async def get_portfolio(
     portfolio_id: str,
     current_user: User = Depends(get_current_user)
 ):
-    """Get portfolio by ID"""
+    """Get portfolio by ID with real-time values and holdings with prices"""
     try:
         portfolio = await Portfolio.get(portfolio_id)
     except:
@@ -93,28 +90,10 @@ async def get_portfolio(
     if str(portfolio.user_id) != str(current_user.id) and not portfolio.is_public:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Get holdings
-    holdings = await Holding.find(Holding.portfolio_id == portfolio.id).to_list()
+    # Get portfolio with calculated values and holdings with prices
+    portfolio_data = await PortfolioService.get_portfolio_with_values(portfolio, include_holdings=True)
     
-    return {
-        "id": str(portfolio.id),
-        "name": portfolio.name,
-        "description": portfolio.description,
-        "is_public": portfolio.is_public,
-        "share_link": portfolio.share_link,
-        "total_value": portfolio.total_value,
-        "total_cost": portfolio.total_cost,
-        "holdings": [
-            {
-                "id": str(h.id),
-                "symbol": h.symbol,
-                "quantity": h.quantity,
-                "average_cost": h.average_cost,
-            }
-            for h in holdings
-        ],
-        "created_at": portfolio.created_at.isoformat(),
-    }
+    return portfolio_data
 
 
 @router.put("/{portfolio_id}", response_model=dict)

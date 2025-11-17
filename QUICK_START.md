@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get TestFol.io up and running in minutes!
+Get QUANTFOLIO up and running in minutes!
 
 ## 📋 Prerequisites
 
@@ -17,7 +17,7 @@ Get TestFol.io up and running in minutes!
 
 ```bash
 # Clone repository (or create new)
-cd testfolio
+cd quantfolio
 
 # Install backend dependencies
 cd backend
@@ -43,10 +43,10 @@ npm install
 **Backend** (`backend/.env`):
 ```env
 ENV=development
-MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/testfolio?retryWrites=true&w=majority
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/quantfolio?retryWrites=true&w=majority
 SECRET_KEY=your-secret-key-here-change-in-production
 CORS_ORIGINS=["http://localhost:3000"]
-DATABASE_NAME=testfolio
+DATABASE_NAME=quantfolio
 ```
 
 **Frontend** (`frontend/.env.local`):

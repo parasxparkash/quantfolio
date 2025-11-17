@@ -1,8 +1,8 @@
-# TestFol.io - Project Summary
+# QUANTFOLIO - Project Summary
 
 ## 🎯 Project Overview
 
-**TestFol.io** is a real-time portfolio tracking application that allows users to manage their investment portfolios with live stock data from Yahoo Finance. This project replicates the functionality of testfol.io using free-tier services.
+**QUANTFOLIO** is a real-time portfolio tracking application that allows users to manage their investment portfolios with live stock data from Yahoo Finance.
 
 ## ✅ Feasibility Assessment
 
@@ -192,7 +192,7 @@ Note: Easy deployment but not free after credits
 ## 🗂️ Project Structure
 
 ```
-testfolio/
+quantfolio/
 ├── frontend/                 # Next.js application
 │   ├── app/                 # App router pages
 │   │   ├── page.tsx        # Landing page
@@ -349,7 +349,7 @@ MIT License - feel free to use this project for learning or as a base for your o
 
 ## 🎉 Conclusion
 
-**TestFol.io** is a fully feasible project using free-tier services. The recommended architecture (Next.js + FastAPI) provides:
+**QUANTFOLIO** is a fully feasible project using free-tier services. The recommended architecture (Next.js + FastAPI) provides:
 
 - ✅ Modern tech stack
 - ✅ Free tier deployment

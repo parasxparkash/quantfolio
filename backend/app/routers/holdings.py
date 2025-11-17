@@ -11,6 +11,7 @@ from app.models.holding import Holding
 from app.models.portfolio import Portfolio
 from app.routers.auth import get_current_user
 from app.models.user import User
+from app.services.portfolio_service import PortfolioService
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def get_holdings(
     portfolio_id: str,
     current_user: User = Depends(get_current_user)
 ):
-    """Get all holdings for a portfolio"""
+    """Get all holdings for a portfolio with real-time prices and gain/loss"""
     # Check portfolio access
     try:
         portfolio = await Portfolio.get(portfolio_id)
@@ -45,17 +46,10 @@ async def get_holdings(
     
     holdings = await Holding.find(Holding.portfolio_id == portfolio.id).to_list()
     
-    return [
-        {
-            "id": str(h.id),
-            "symbol": h.symbol,
-            "quantity": h.quantity,
-            "average_cost": h.average_cost,
-            "first_purchase_date": h.first_purchase_date.isoformat(),
-            "last_transaction_date": h.last_transaction_date.isoformat(),
-        }
-        for h in holdings
-    ]
+    # Calculate values with current prices from yfinance
+    holdings_data = await PortfolioService.calculate_holdings_values(holdings)
+    
+    return holdings_data
 
 
 @router.post("", response_model=dict)
@@ -91,14 +85,9 @@ async def create_holding(
     )
     await holding.create()
     
-    # Update portfolio totals (simplified - should calculate from market data)
-    
-    return {
-        "id": str(holding.id),
-        "symbol": holding.symbol,
-        "quantity": holding.quantity,
-        "average_cost": holding.average_cost,
-    }
+    # Return holding with calculated values including current price
+    holding_data = await PortfolioService.calculate_holding_value(holding)
+    return holding_data
 
 
 @router.put("/{holding_id}", response_model=dict)
@@ -126,12 +115,9 @@ async def update_holding(
     holding.last_transaction_date = datetime.utcnow()
     await holding.save()
     
-    return {
-        "id": str(holding.id),
-        "symbol": holding.symbol,
-        "quantity": holding.quantity,
-        "average_cost": holding.average_cost,
-    }
+    # Return holding with calculated values including current price
+    holding_data = await PortfolioService.calculate_holding_value(holding)
+    return holding_data
 
 
 @router.delete("/{holding_id}")

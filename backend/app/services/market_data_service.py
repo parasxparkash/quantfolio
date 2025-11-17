@@ -29,7 +29,9 @@ class MarketDataService:
                     "volume": cached.volume,
                     "market_cap": cached.market_cap,
                     "pe_ratio": cached.pe_ratio,
-                    "data": cached.data,
+                    "name": cached.name,
+                    "currency": cached.currency,
+                    "previous_close": cached.previous_close,
                     "cached": True,
                 }
         
@@ -57,10 +59,12 @@ class MarketDataService:
                 "pe_ratio": info.get('trailingPE'),
                 "name": info.get('longName'),
                 "currency": info.get('currency', 'USD'),
-                "data": info,
+                "previous_close": prev_close,
+                # Note: We don't store the entire 'info' dict to save database space
+                # If full info is needed, it can be fetched on-demand from yfinance
             }
             
-            # Update cache
+            # Update cache - only store essential fields, not entire info dict
             if use_cache:
                 expires_at = datetime.utcnow() + timedelta(seconds=settings.YFINANCE_CACHE_TTL)
                 
@@ -72,7 +76,9 @@ class MarketDataService:
                     existing_cache.volume = quote_data['volume']
                     existing_cache.market_cap = quote_data['market_cap']
                     existing_cache.pe_ratio = quote_data['pe_ratio']
-                    existing_cache.data = info
+                    existing_cache.name = quote_data['name']
+                    existing_cache.currency = quote_data['currency']
+                    existing_cache.previous_close = prev_close
                     existing_cache.updated_at = datetime.utcnow()
                     existing_cache.expires_at = expires_at
                     await existing_cache.save()
@@ -85,7 +91,9 @@ class MarketDataService:
                         volume=quote_data['volume'],
                         market_cap=quote_data['market_cap'],
                         pe_ratio=quote_data['pe_ratio'],
-                        data=info,
+                        name=quote_data['name'],
+                        currency=quote_data['currency'],
+                        previous_close=prev_close,
                         expires_at=expires_at,
                     )
                     await cache.create()

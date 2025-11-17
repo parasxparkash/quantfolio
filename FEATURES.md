@@ -66,12 +66,13 @@ This document lists all features implemented and planned for TestFol.io.
 - ✅ Landing page
 - ✅ Login page
 - ✅ Signup page
-- ✅ Dashboard (portfolio overview)
-- ⏳ Portfolio detail page (in progress)
-- ⏳ Add/Edit holdings page (planned)
-- ⏳ Asset detail page (planned)
-- ⏳ Transactions page (planned)
-- ⏳ Watchlist page (planned)
+- ✅ Dashboard (portfolio overview with real-time values)
+- ✅ Portfolio list page (with create portfolio)
+- ✅ Portfolio detail page (with holdings table, real-time prices, add holding)
+- ⏳ Add/Edit holdings page (integrated into portfolio detail)
+- ⏳ Asset detail page (backend ready, frontend missing)
+- ⏳ Transactions page (backend ready, frontend tab placeholder)
+- ⏳ Watchlist page (backend ready, frontend missing)
 - ⏳ Settings page (planned)
 
 ---
@@ -79,11 +80,13 @@ This document lists all features implemented and planned for TestFol.io.
 ## 🚧 Features in Progress
 
 ### Portfolio Detail Page
-- [ ] Portfolio value calculation
-- [ ] Holdings table with real-time prices
-- [ ] Performance charts
-- [ ] Asset allocation pie chart
-- [ ] Gain/loss calculation
+- ✅ Portfolio value calculation (COMPLETED - uses yfinance)
+- ✅ Holdings table with real-time prices (COMPLETED)
+- ✅ Add holding functionality (COMPLETED)
+- ✅ Portfolio summary cards (COMPLETED)
+- [ ] Performance charts (pending - can use recharts)
+- [ ] Asset allocation pie chart (pending - can use recharts)
+- ✅ Gain/loss calculation (COMPLETED - uses yfinance)
 
 ---
 

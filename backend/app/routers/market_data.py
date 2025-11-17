@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import yfinance as yf
 
 from app.services.market_data_service import MarketDataService
+from app.models.price_cache import PriceCache
 
 router = APIRouter()
 
@@ -135,4 +136,17 @@ async def search_symbols(query: str):
             return []
     except:
         return []
+
+
+@router.post("/cache/cleanup")
+async def cleanup_cache():
+    """Manually trigger cleanup of expired cache entries"""
+    try:
+        deleted_count = await PriceCache.cleanup_expired()
+        return {
+            "message": "Cache cleanup completed",
+            "deleted_count": deleted_count
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error cleaning cache: {str(e)}")
 

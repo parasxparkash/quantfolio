@@ -1,4 +1,4 @@
-# TestFol.io - Portfolio Tracker
+# QUANTFOLIO - Portfolio Tracker
 
 A real-time portfolio tracking application with live stock data from Yahoo Finance.
 
@@ -15,7 +15,7 @@ A real-time portfolio tracking application with live stock data from Yahoo Finan
 #### 1. Clone the Repository
 ```bash
 git clone <your-repo-url>
-cd testfolio
+cd quantfolio
 ```
 
 #### 2. Backend Setup
@@ -41,7 +41,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-testfolio/
+quantfolio/
 ├── frontend/          # Next.js frontend application
 ├── backend/           # FastAPI backend application
 ├── ARCHITECTURE.md    # Detailed architecture documentation
@@ -74,6 +74,16 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architecture, features, an
 3. Select repository
 4. Build command: `cd backend && pip install -r requirements.txt`
 5. Start command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+## 🔢 Version Management
+
+QUANTFOLIO uses automatic version management. The version automatically increments when you push to a remote repository.
+
+- **Current Version**: See `VERSION` file
+- **Setup**: Run `scripts/install_git_hook.ps1` (Windows) or `scripts/install_git_hook.sh` (Linux/Mac)
+- **Manual Update**: Run `python scripts/update_version.py`
+
+See [scripts/README.md](./scripts/README.md) for more details.
 
 ## 📝 License
 

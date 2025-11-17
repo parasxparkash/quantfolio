@@ -10,13 +10,13 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # App
-    APP_NAME: str = "TestFol.io API"
+    APP_NAME: str = "QUANTFOLIO API"
     ENV: str = "development"
     DEBUG: bool = True
     
     # Database
-    MONGODB_URL: str = "mongodb+srv://username:password@cluster.mongodb.net/testfolio?retryWrites=true&w=majority"
-    DATABASE_NAME: str = "testfolio"
+    MONGODB_URL: str = "mongodb+srv://username:password@cluster.mongodb.net/quantfolio?retryWrites=true&w=majority"
+    DATABASE_NAME: str = "quantfolio"
     
     # Redis
     REDIS_URL: str = "redis://default:password@redis-host:6379"
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ]
     
     # yfinance
-    YFINANCE_CACHE_TTL: int = 60  # 1 minute for stock prices
+    YFINANCE_CACHE_TTL: int = 300  # 5 minutes for stock prices (reduced API calls, expired entries auto-cleaned)
     YFINANCE_MAX_RETRIES: int = 3
     
     # Background Jobs

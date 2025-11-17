@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying TestFol.io to free tier services: Netlify (frontend) and Render (backend).
+This guide covers deploying QUANTFOLIO to free tier services: Netlify (frontend) and Render (backend).
 
 ## 📋 Prerequisites
 
@@ -20,7 +20,7 @@ This guide covers deploying TestFol.io to free tier services: Netlify (frontend)
 4. Whitelist IP addresses (0.0.0.0/0 for development)
 5. Get your connection string:
    ```
-   mongodb+srv://username:password@cluster.mongodb.net/testfolio?retryWrites=true&w=majority
+   mongodb+srv://username:password@cluster.mongodb.net/quantfolio?retryWrites=true&w=majority
    ```
 
 ---
@@ -43,7 +43,7 @@ git push -u origin main
 2. Click **New +** → **Web Service**
 3. Connect your GitHub repository
 4. Configure the service:
-   - **Name**: `testfolio-api`
+   - **Name**: `quantfolio-api`
    - **Environment**: `Python 3`
    - **Build Command**: `cd backend && pip install -r requirements.txt`
    - **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
@@ -51,17 +51,17 @@ git push -u origin main
 5. Add Environment Variables:
    ```
    ENV=production
-   MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/testfolio?retryWrites=true&w=majority
+   MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/quantfolio?retryWrites=true&w=majority
    SECRET_KEY=<generate-a-random-secret-key>
    CORS_ORIGINS=["https://your-app.netlify.app"]
-   DATABASE_NAME=testfolio
+   DATABASE_NAME=quantfolio
    ```
 
 6. Click **Create Web Service**
 
 7. Wait for deployment (first deploy takes ~5 minutes)
 
-8. Copy your Render URL: `https://testfolio-api.onrender.com`
+8. Copy your Render URL: `https://quantfolio-api.onrender.com`
 
 ### 2.3 Render Free Tier Limitations
 - Spins down after 15 minutes of inactivity
@@ -77,7 +77,7 @@ git push -u origin main
 
 1. Update `frontend/.env.production`:
    ```
-   NEXT_PUBLIC_API_URL=https://testfolio-api.onrender.com
+   NEXT_PUBLIC_API_URL=https://quantfolio-api.onrender.com
    ```
 
 2. Push changes to GitHub
@@ -94,7 +94,7 @@ git push -u origin main
 
 5. Add Environment Variables:
    ```
-   NEXT_PUBLIC_API_URL=https://testfolio-api.onrender.com
+   NEXT_PUBLIC_API_URL=https://quantfolio-api.onrender.com
    ```
 
 6. Click **Deploy site**
@@ -229,7 +229,7 @@ ENV=production
 MONGODB_URL=mongodb+srv://...
 SECRET_KEY=<random-secret>
 CORS_ORIGINS=["https://your-app.netlify.app"]
-DATABASE_NAME=testfolio
+DATABASE_NAME=quantfolio
 REDIS_URL=redis://... (optional)
 REDIS_ENABLED=False
 ```
