@@ -37,15 +37,28 @@ interface Portfolio {
   holdings?: Holding[]
 }
 
+interface Transaction {
+  id: string
+  symbol: string
+  type: 'buy' | 'sell' | 'dividend' | 'split'
+  quantity: number
+  price: number
+  date: string
+  fees: number
+  notes?: string
+}
+
 export default function PortfolioDetailPage() {
   const router = useRouter()
   const params = useParams()
   const portfolioId = params.id as string
   const { isAuthenticated } = useAuthStore()
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'holdings' | 'transactions'>('holdings')
   const [showAddHolding, setShowAddHolding] = useState(false)
+  const [showAddTransaction, setShowAddTransaction] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -57,7 +70,7 @@ export default function PortfolioDetailPage() {
 
   const fetchPortfolio = async () => {
     try {
-      const data = await api.get(`/api/portfolios/${portfolioId}`)
+      const data = await api.get<Portfolio>(`/api/portfolios/${portfolioId}`)
       setPortfolio(data)
     } catch (error) {
       console.error('Error fetching portfolio:', error)
@@ -66,6 +79,21 @@ export default function PortfolioDetailPage() {
       setLoading(false)
     }
   }
+
+  const fetchTransactions = async () => {
+    try {
+      const data = await api.get<Transaction[]>(`/api/transactions/portfolio/${portfolioId}`)
+      setTransactions(data)
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'transactions' && portfolioId) {
+      fetchTransactions()
+    }
+  }, [activeTab, portfolioId])
 
   const handleDeleteHolding = async (holdingId: string) => {
     if (!confirm('Are you sure you want to remove this holding?')) return
@@ -76,6 +104,18 @@ export default function PortfolioDetailPage() {
     } catch (error) {
       console.error('Error deleting holding:', error)
       alert('Failed to delete holding')
+    }
+  }
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to delete this transaction?')) return
+    
+    try {
+      await api.delete(`/api/transactions/${transactionId}`)
+      fetchTransactions() // Refresh transactions
+    } catch (error) {
+      console.error('Error deleting transaction:', error)
+      alert('Failed to delete transaction')
     }
   }
 
@@ -291,11 +331,100 @@ export default function PortfolioDetailPage() {
 
         {/* Transactions Tab */}
         {activeTab === 'transactions' && (
-          <div className="bg-white rounded-lg border p-6">
-            <p className="text-gray-600">Transactions feature coming soon...</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Backend API is ready. Frontend implementation pending.
-            </p>
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Transaction History</h2>
+              <button
+                onClick={() => setShowAddTransaction(true)}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
+              >
+                Add Transaction
+              </button>
+            </div>
+
+            {transactions.length === 0 ? (
+              <div className="p-12 text-center">
+                <p className="text-gray-600 mb-4">No transactions yet</p>
+                <button
+                  onClick={() => setShowAddTransaction(true)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                >
+                  Add Your First Transaction
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fees</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {transactions.map((transaction) => {
+                      const total = transaction.quantity * transaction.price
+                      const date = new Date(transaction.date)
+                      
+                      return (
+                        <tr key={transaction.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {date.toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                            {transaction.symbol}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              transaction.type === 'buy' ? 'bg-green-100 text-green-800' :
+                              transaction.type === 'sell' ? 'bg-red-100 text-red-800' :
+                              transaction.type === 'dividend' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {transaction.type.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">{transaction.quantity}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">${transaction.price.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                            ${total.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {transaction.fees > 0 ? `$${transaction.fees.toFixed(2)}` : '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            {transaction.notes ? (
+                              <span className="text-sm text-gray-600" title={transaction.notes}>
+                                {transaction.notes.length > 30 
+                                  ? transaction.notes.substring(0, 30) + '...' 
+                                  : transaction.notes}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => handleDeleteTransaction(transaction.id)}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -307,6 +436,18 @@ export default function PortfolioDetailPage() {
             onSuccess={() => {
               setShowAddHolding(false)
               fetchPortfolio()
+            }}
+          />
+        )}
+
+        {/* Add Transaction Modal */}
+        {showAddTransaction && (
+          <AddTransactionModal
+            portfolioId={portfolioId}
+            onClose={() => setShowAddTransaction(false)}
+            onSuccess={() => {
+              setShowAddTransaction(false)
+              fetchTransactions()
             }}
           />
         )}
@@ -449,3 +590,204 @@ function AddHoldingModal({
   )
 }
 
+// Add Transaction Modal Component
+function AddTransactionModal({ 
+  portfolioId, 
+  onClose, 
+  onSuccess 
+}: { 
+  portfolioId: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const [symbol, setSymbol] = useState('')
+  const [type, setType] = useState<'buy' | 'sell' | 'dividend' | 'split'>('buy')
+  const [quantity, setQuantity] = useState('')
+  const [price, setPrice] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [fees, setFees] = useState('0')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      // Fetch current price if price not provided
+      let transactionPrice = parseFloat(price)
+      if (!transactionPrice && symbol) {
+        try {
+          const quote = await api.get(`/api/market/quote/${symbol.toUpperCase()}`)
+          transactionPrice = quote.price
+          setPrice(transactionPrice.toString())
+        } catch (err) {
+          setError('Could not fetch price. Please enter price manually.')
+          setLoading(false)
+          return
+        }
+      }
+
+      await api.post('/api/transactions', {
+        portfolio_id: portfolioId,
+        symbol: symbol.toUpperCase(),
+        type,
+        quantity: parseFloat(quantity),
+        price: transactionPrice,
+        date: new Date(date).toISOString(),
+        fees: parseFloat(fees) || 0,
+        notes: notes || null,
+      })
+
+      onSuccess()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to add transaction')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-4">Add Transaction</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Symbol *
+              </label>
+              <input
+                type="text"
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                placeholder="AAPL"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type *
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                required
+              >
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+                <option value="dividend">Dividend</option>
+                <option value="split">Split</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="10"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Price *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="Auto-filled from current price"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave empty to auto-fill
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fees
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={fees}
+                  onChange={(e) => setFees(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Optional notes..."
+                rows={2}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+              />
+            </div>
+
+            {error && (
+              <div className="text-red-600 text-sm">{error}</div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? 'Adding...' : 'Add Transaction'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
