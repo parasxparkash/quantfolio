@@ -71,7 +71,7 @@ This document lists all features implemented and planned for TestFol.io.
 - ✅ Portfolio detail page (with holdings table, real-time prices, add holding)
 - ⏳ Add/Edit holdings page (integrated into portfolio detail)
 - ⏳ Asset detail page (backend ready, frontend missing)
-- ⏳ Transactions page (backend ready, frontend tab placeholder)
+- ✅ Transactions tab (fully implemented in portfolio detail)
 - ⏳ Watchlist page (backend ready, frontend missing)
 - ⏳ Settings page (planned)
 
