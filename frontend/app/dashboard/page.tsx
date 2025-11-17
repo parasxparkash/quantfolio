@@ -63,12 +63,29 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex justify-between">
                   <span>Total Value:</span>
-                  <span className="font-semibold">${portfolio.total_value.toFixed(2)}</span>
+                  <span className="font-semibold">${portfolio.total_value?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Total Cost:</span>
-                  <span>${portfolio.total_cost.toFixed(2)}</span>
+                  <span>${portfolio.total_cost?.toFixed(2) || '0.00'}</span>
                 </div>
+                {portfolio.total_gain_loss !== undefined && (
+                  <div className="flex justify-between mt-2 pt-2 border-t">
+                    <span>Gain/Loss:</span>
+                    <span className={`font-semibold ${
+                      portfolio.total_gain_loss >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {portfolio.total_gain_loss >= 0 ? '+' : ''}${portfolio.total_gain_loss?.toFixed(2) || '0.00'} 
+                      ({portfolio.total_gain_loss_percent?.toFixed(2) || '0.00'}%)
+                    </span>
+                  </div>
+                )}
+                {portfolio.holdings_count !== undefined && (
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Holdings:</span>
+                    <span>{portfolio.holdings_count}</span>
+                  </div>
+                )}
               </div>
             </Link>
           ))}
